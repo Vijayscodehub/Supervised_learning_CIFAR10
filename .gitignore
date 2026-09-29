@@ -1,0 +1,25 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+
+# Project virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter generated files
+.ipynb_checkpoints/
+
+# Downloaded datasets and generated training artifacts
+data/
+checkpoints/
+runs/
+reports/figures/
+
+# Local configuration and secrets
+.env
+.vscode/
+
+# Logs and operating-system files
+*.log
+.DS_Store

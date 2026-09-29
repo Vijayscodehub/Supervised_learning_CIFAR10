@@ -1,0 +1,1454 @@
+Hello and welcome back to the project
+number two of this playlist that is deep
+learning projects. Uh today the data set
+that I have chosen is rather a famous
+data set that you guys must be aware of
+that is CIFA 10 data set. If you are not
+already aware of it, don't worry. We'll
+be going through uh step by step through
+all the process. Just keep this in mind.
+Although this uh data set is quite you
+know famous. However, uh the technique
+that I'll be using for this particular
+project, it is going to be rather
+advanced, right? So, don't think that it
+is going to be just yet another project
+that you must have seen elsewhere. Uh it
+is going to be completely advanced level
+project of uh creating neural network.
+And yet another thing the last video it
+was uh uh the project that we did was
+using the pyto library. Today I'll be
+using tensorflow library that is yet
+another library that you can use. So
+with that in mind let us get started and
+start off with the project. So here I am
+uh in my Google collab notebook. uh now
+before uh you know starting with the
+project right away let us see the data
+set. So the CIA 10 data set it is
+actually a well established benchmark in
+the field of machine learning and deep
+learning is specifically designed for uh
+image classification.
+uh it contains about 60,000 images as
+you can see here and they are colored
+images thereby you have three color
+channels that is RGB and the data set it
+is having 10 classes right so those
+classes are all of them over here that
+is airplane automobile uh bird cat deer
+dog frog horse sheep truck so each class
+they contain equal distribution that is
+about you know 6,000 images from the
+image uh total image count uh and
+obviously when you are putting uh 50,000
+as your training images uh so in each of
+the classes 5,000 of those images will
+be in the training set and 1,000 in the
+testing set I'm talking about per class
+here so the our objective is very clear
+we have to familiarize ourself with this
+CR 10 data set visually uh maybe inspect
+sample images from v various classes to
+understand the data distribution. Then
+we are going to be normalizing the pixel
+values of the images to enhance model
+training efficiency. Maybe convert the
+image labels into a one hot uh encoded
+format suitable for classification task.
+Then we'll also implement the data
+argumentation technique to kind of
+increase the variability uh of the data
+and improve the model generalization.
+Then obviously we'll go to the designing
+of the CNN uh that is catering to this
+CR 10 data set using KAS framework.
+Then of course comes the training part
+that is training the CNN using the
+prepared data set and then we'll see if
+there are some more analysis that we can
+perform and at the uh last the you know
+task is very clear that is you have to
+go for the model evaluation. Let us go
+ahead and right away jump to the uh
+Google collab and see how it all pans
+out. I'm going to humbly call this as
+C4
+10
+project.
+All right. So before importing the data,
+the first step as always is to import
+all the libraries. So I'm going to start
+with importing
+CV2 computer vision. I'm going to import
+numpy as np. I'm going to import
+uh
+you can also import URL lib to basically
+request any uh URL that we might be
+using. We'll import the usual mattplot
+lib dot piplot as plt.
+Then the training uh trend split is not
+required for us because it is already
+provided to us. So but from kas
+dot
+data sets I'm going to import
+ca
+10 that is the name of the data set that
+we'll be using then skarn
+dot
+model selection
+model selection
+import
+trend
+test
+split
+then uh I'm going to import
+tensorflow
+dot kas dot tree
+processing
+dot image then you want to import
+image
+data
+generator
+then from kas class
+dot utils I'm going to import two
+categorical
+then import kas dot models
+import
+sequential to create the sequential
+network
+then from
+sorry this has to
+from here
+and this then kas dot models you have to
+import
+dense to make sure that it is the dense
+network that you'll be using then
+convolutional 2D layer which we'll be
+utilizing then max
+max
+pooling
+2D
+from kas
+dot layers. Uh I think this should be
+layers here.
+And this is going to
+import
+dropout
+flatten
+and
+batch
+normalization.
+Then this is going to be from kas
+dot regularizer
+import
+l2 if it is required. I don't think so
+but we'll use it uh from I I mean we'll
+import it for now but I'm going to
+import definitely the optimizers. Yeah
+I'll be using Adam. Uh then also I have
+to import the
+kas dot call packs.
+import
+reduce LR
+on
+plateau
+and early stopping so that we can stop
+the training of our model if it is not
+fruitful to us then also uh well not
+required I'll just run this and make
+sure that everything is fine here
+okay so we have imported everything now
+let us train uh Sorry. Uh go for the
+data uh loading that is data
+preparation
+and
+exploration.
+All right. So first import the data set.
+I'm going to straight away say x train,
+y train. This is going to my training
+set. and then X test as
+this and Y test equal to
+C
+10 dot load data.
+Okay. So while it gets uh downloaded
+just a very quick note uh first is we
+are actually using CP as of now and you
+know after uh coding maybe half or for
+at the time of trading basically we'll
+be using the GPUs right so keep that in
+mind and one more thing is that you know
+people who are uh not aware just turn
+off your AI assistance for this right
+that is going to be very helpful for you
+go to tools and settings and here AI
+assistance just uncheck this box here
+okay because it is going to be very
+important for you to learn otherwise the
+uh you know intense feature of the
+Google collab it will keep on you know
+interfering with whatever you're trying
+to code that is not a good way to learn
+I highly recommend that you do not use
+it
+okay
+um well I think we have to use trend
+test split for actually to you know uh
+prepare the validation data because this
+is just testing and training set. So I'm
+going to just import one more thing here
+from in fact you know I'll not do that
+over here. I'll just put that somewhere
+here. I'll say from
+uh
+skarn
+dot
+model selection you want to import
+train test split and then I'm going to
+say
+x train
+x valid valid for validation and y train
+comma
+y validation is equal to trend
+test_split
+and
+extra since I have checked it again let
+me just turn it off very quickly not
+required
+Right. So this is X train and then this
+is
+Y train.
+Test size I'm going to put as maybe 10%
+that is 0.1 and random state. So you
+know 10% of 50,000 uh images that you
+have thereby the 5,000 it will be in the
+validation set and the remaining would
+be in the uh training set. So random set
+I'm just putting anything you can put
+any other random set if you want to.
+There we go. Uh let us try to understand
+the shape of everything that we have
+got. Right? So extra
+comma sorry not comma extra dot shape
+comma
+uh
+y train
+dot shape
+is this you see this this is 45,000
+images of this height and width and this
+color channel and then what is white and
+these are nothing but the label we'll
+talk about that in a moment But if you
+just see this this is I think if I can
+show
+y train
+you see these are just numbers and these
+numbers are nothing but for example zero
+this zero stands for the airplane one
+stands for automobile uh two is bird cat
+is uh you know three then four five six
+and all that so we have to do something
+about it we'll make sense of this later
+on uh but let us try to uh see the shape
+of other things that is x valid dot
+shape comma
+y valid.
+Oh, it is validation unfortunately. Uh
+let us put this as valid only just to be
+consistent. Run this and yeah now this
+is valid here valid dot shape
+you can see it is having you know
+exactly the same thing right 4500 images
+uh and here as well. So why? Because we
+have set a test size of 10%. The 10% of
+50,000 images which was at the uh the
+you know uh training images the number
+of training images that we had at the
+first place the 10% of this is always
+going to be 5,000 right. So sorry 4,500
+and then the remaining would it would be
+this year. Okay. So extra and Y uh
+I think yeah so this is because again
+since we are choosing a test size of
+10%.
+Right? So that would be 4500
+we had 45 images at the first place uh
+apparently and from that we got this
+0.1. Let me run this one more time.
+There has to be some problem here. So
+what I'll do is run everything one more
+time because what is happening here is
+basically I have run this twice. So my
+extend got updated and thereby I'm
+getting this kind of wrong number here.
+This should be I think 4500,000
+and this should be 5,000 if I my memory
+source will. So what I'll do is I'll
+just run everything one more time.
+So it will load the data set again.
+There we go. So it will load the it has
+load the data set again and then it has
+done the split again and thereby I'm
+getting 45,000 images rightfully as X
+train and Y train and then 5,000
+remaining one they are the validation
+set. How about the training set? So I'll
+say
+X test dot shape it is the 10,000 images
+that we had at the first place. Okay.
+And similarly the
+y test dot shape
+is this.
+Okay. Now next is to create the classes.
+Now for creating the classes I'm going
+to take a unique approach. I'll say
+class
+names
+is equal to I'm going to just copy
+everything
+from
+uh if I can find some string here that
+would be very helpful.
+Okay, I don't have any. So let us copy
+this from
+actually I don't have anything. I'll say
+I'll call this as uh
+y
+train dot classes.
+Not really.
+Uh well in that case you know just copy
+this one by one and just put that over
+here right because if I copy this in
+this manner it is going to copy the uh
+image itself that is not going to be
+helpful. So what I have to do basically
+is create a list of this. So airplane is
+going to be you know zero.
+Okay. And obviously this has to be in a
+string,
+right? Then next one I believe it's
+automobile.
+Again, you can type or you can do a copy
+paste. I'm I'll prefer to, you know,
+type it because that would be better.
+Bird.
+Then I think cat if I'm not wrong. So we
+have yeah bird, cat, deer, dog, frog,
+horse, ship and truck. All right. So uh
+bird, cat, deer,
+dog,
+frog,
+a horse,
+ship, and
+truck.
+Okay. So what I'm trying to do here
+basically is try to give you an overview
+of the uh you know image that I have
+loaded. So I'm going to create a figure
+of this. I'll say for every index in
+range
+64. Why 64? It will be clear in a while.
+I'm going to create a subplot
+subplot of 8 by 8 and index + 1.
+And then I'm going to say uh plt
+plt dot im show is
+x
+train
+of that index.
+Okay. And lastly over here I'll say plt
+dot show. I'll do one more thing. I'll
+create a figure at the beginning.
+So this would be at the beginning itself
+I'm drawing a canvas basically plt dot
+figure is going to be fixed size
+of uh maybe 15 by 15
+right that
+there you go all right so bunch of
+things here very good but uh it is not
+clear. So I'll just fix few of the
+things here. Uh I'll start with uh
+you know first of all I'll say xix
+is this empty list
+plt y tix
+is this empty list
+and then I'll say plt.title title I'll
+put some title for each of the images
+plt.title title it is going to be class
+names that I have created for that index
+and at index zero
+run that
+uh okay there's some problem here let me
+fix this
+yeah class names just not this I have to
+put
+y train here or because I'm talking
+about the corresponding y train that I'm
+trying to plot over here right so I'm
+plotting the X trend and the
+corresponding Y trend I'm going to put
+that in the label and this would be
+now if I run this
+there we go quite well right so you can
+see that I'm having this truck here then
+horse then ship uh this cat frog truck
+cat airplane dog and so on and so forth
+so this is again it is coming from the
+training set that we got. Now you run
+this as many times as you want if you
+want to.
+Okay, just run this and every time uh
+you can display this image. Right now
+here uh these are you know some of the
+uh images that I got from the uh you
+know the uh training set. Now next step
+what I'm going to do is I'm going to do
+the data processing uh sorry data
+prep-processing rather
+in data prep-processing phase we
+basically undertake uh preparatory
+measures to ensure that our data set is
+uh you know aptly prepared for modeling
+process and that basically includes
+three things right and it can be more
+than that as well but I'll be taking
+these three things into consideration
+that is normalization
+of images
+second would be one hot
+encoding of labels
+and third is
+data
+augmentation.
+So first step right away is to normalize
+the data. I'm going to convert all the
+pixel values to the uh you know some
+sort of number the floating 32 type
+number and then normalize them by uh uh
+subtracting the mean and dividing by the
+standard deviation of the training set
+that enhances the model's training
+efficiency and effectiveness. So what
+I'm going to do well this is under
+normalization.
+So this is
+normalization
+and that is going to
+have first
+converting
+pixel values to float 32. So say extra
+dot stype
+sype would be
+flo 32 and I'll just copy this
+particular part.
+I'll copy this as it is
+and make some changes. In fact I'll put
+this over here. Extrain here is equal to
+this and then I'll copy this and then
+make the changes. So this is copy
+then paste.
+This is
+test.
+This is also
+test.
+then this is
+valid
+and this also is
+valid. So this is converting pixels
+value to float 32 and then I'm going to
+calculate
+you can use any other library as well to
+do this but I'm taking the conventional
+method that is by calculating the mean
+and standard deviation myself of the
+training images.
+So this is going to be mean equal to np
+dot mean x training set and standard
+deviation is equal to np dot standard
+deviation
+x train
+then I'm going to take x train and say
+that
+x train
+minus
+mean
+and
+this is going to be
+uh divided by
+standard deviation
+plus some very tiny tiny number maybe 0
+01.
+The reason for this is to prevent uh the
+addition sorry prevent the division by
+zero that should not happen that is why
+we are just adding this extra number
+here. So x train is this then this is
+x test.
+This is also x test.
+And same goes one more time for
+validation set.
+This is valid.
+And this is also
+valid.
+This is uh I think there's a typo here.
+This is s type by the way. That is why
+I'm getting the error. There you go. Run
+this.
+There you go. Right. So this what you
+have done basically is we have
+normalized
+the data.
+Okay. Next step is to do the one hot
+encoding.
+Okay. I'm going to convert the class
+tables to one hot vectors to transform
+the categorical labels into a uh format
+that is suitable for multiclass
+classification by neural network. So all
+I have to do is take my Y train
+white train which by the way happens to
+be all this number and I have to convert
+this
+to
+categorical
+and
+comma
+10. Run that. There it goes. So now you
+can see that we have converted that into
+an array two dimensional array which I'm
+going to assign to
+y
+train. Now take this entire thing
+and this is
+valid.
+This is also valid.
+And
+now if you're not aware of encoding uh
+that is one hot encoding it is nothing
+but you know kind of putting all the
+categories into uh zero and one
+basically right it is like a signal that
+whether it's a a truck is a truck or not
+a truck. So once means one means it is a
+truck right thereby there that is the
+first one at the that I'm getting is
+sorry about this
+the first one that I'm getting over here
+was this is telling me that it's a truck
+now maybe this one over here that is uh
+uh third from the last it is horse and
+so on and so forth right so this is the
+job of one hot encoding if you're not
+aware of it please find out.
+So this is a wide test here
+that I have to finish doing. So this is
+one odd encoding of the labels. Next is
+to do the
+data
+augmentation.
+All right. So now what I'm going to do
+is I'm going to implement the data
+agumentation to kind of artificially
+expand the size of the training set by
+creating modified version of the images.
+Maybe things like you know rotation,
+shifts, flips, sharing, intensity
+changes and introduce those small
+variations to existing data thereby
+creating many more samples to learn
+from. Again the choice of data
+augmentation often depends on the
+special characteristics uh of the data
+set and the problem that we are trying
+to solve. This particular data set it is
+comprising of very small color images of
+just 32x 32 uh size. So given the nature
+of the uh augumentation I'll be doing
+some sort of rotation maybe of maybe
+around 15° uh then maybe height and
+width changes of something maybe uh you
+know we can uh change by about 20% of
+the height and the width uh respectively
+of the images. Now again since the
+images are small the large shifts might
+not uh you know might be basically uh it
+it might put the object outside of the
+images then maybe we will do some
+horizontal flip because it is a sensible
+choice for this data set because many
+images the object of the interest
+remains the same when flipped horizontal
+for example a flipped image of the car
+is still it is still going to be car
+you're going to be classifying that as a
+car only then maybe some zooming I'll
+zoom in by about maybe 10% % that can
+help our model generalize better. Uh
+maybe some some brightness and all that
+we can deal with that as well. Anyway,
+let us go ahead and do that. So, I'm
+going to say
+data
+generator
+is going to have
+image data generator.
+Now you can see this there are just so
+many things over here so many things
+that I've discussed horizontal flip
+vertical flip being false and true and
+all that. So let us take uh some of the
+things. So I'll take the rotation
+rotation
+range
+is 15° and what I'm doing basically is
+rotate the images
+by
+up to 15°
+not all the images are rotated by uh 15°
+some would be maybe uh one would be
+maybe 5° then other would be 5.2° two°
+then maybe some other n°ree and so on
+and so forth. So this is rotation of the
+images then
+width
+shift range is 0
+12.
+This is to shift images
+horizontally
+by
+up to
+12%. Of what? Of width. Width means the
+width means width, right? So, uh width
+of the images. Similarly, I'll have the
+height and I'm not going into
+description. Uh but this is height.
+Shift
+range is equal to 0.12.
+Then I'll say
+horizontal
+flip is true. Maybe if you want you can
+do vertical flip as well. I'll try to
+zoom in
+zoom
+uh range
+is about 10% 0.1
+then the this one you can see the
+brightness here is somewhere
+yeah brightness range okay so I'll
+change the brightness up to maybe 10% so
+I'll say brightness of
+brightness range is going to be from
+uh maybe 10% down and 10% up 0.1 to 1.1.
+Okay. So changing the brightness by up
+to 10% again both down and below. Then
+this is
+sheer range.
+Shear range is nothing but the you know
+sheer intensity. and this so I'm just
+explaining the part which is I feel
+requires the uh explanation this is
+nothing but sheer angle in anti-
+clockwise
+direction and just to be clear this is
+in degree and then channel shift
+intensity as well
+shift range
+is 0.1.
+Okay, I got an error. Sheer range. Yeah,
+it just requires a comma here.
+And this requires a range.
+There you go. All right. So when I run
+this code, we are setting a pipeline for
+pre-processing the image during model
+training. Remember this we have not
+still uh you know augumented the image.
+This is just you know instance that we
+have created that we are going to be
+used during we'll be using during the
+model training. Uh because this
+generator applies a series of this
+random transformation that we have
+defined to the image each time they uh
+you know loaded into the model for
+training. Each time an epoch is run
+during model training, this random
+transformation will create different
+variations of the original image. Right
+now, uh let us go ahead and define the
+model architecture.
+Right. So the model architecture that I
+am going to define is uh inspired from
+uh VGG16 network that is it contains
+multiple con convolutional layer
+followed by max pooling and dropout
+layer and finally a fully connected
+layer for classification.
+uh while not adopting you know advanced
+module like residuals or you know
+inceptions uh the one that I'm going to
+design is going to be simpler I'll
+ensure that there are fewer parameter
+and a more you know straightforward
+architecture uh but I'll try to make it
+make it more computationally efficient
+now
+let us stay let us start with you know
+what I'm trying to do here I'm going to
+start with initializing the model.
+Model is sequential
+that we have imported. Then I'm going to
+set a weight decay. Weight decay
+uh
+is about 01.
+This is for what? weight decay
+for L2
+regularization.
+Right? Then I'm going to add the model.
+I'll say model dot add.
+It is going to have
+filter
+as
+32.
+Okay. So the network begins with a pair
+of convolutional 2D layer will pair
+means I'll be adding one more layer here
+and then it will have bash normalization
+which accelerates the training and
+provides some sort of regularization
+that can help us in preventing the
+overfitting and then I'm going to say
+kernel size is equal to 3x3
+padding
+is I'll keep it as same
+activation function
+activation
+is equal to
+relu
+and
+I'll say
+uh
+kernel
+kernel
+underscore regularize
+z equal to
+L2
+then the weight decay that I have
+defined earlier.
+All right. And then it is going to have
+the shape that is going to be basically
+the input shape that I have
+input
+shape is equal to
+extra dot shape. Grab me everything from
+one onward. Let me run this if
+everything is well. Well, there's some
+problem here. This is uh filter
+is 32 which looks okay to me. Yeah.
+Filters by the way. Filters.
+Okay.
+Oh. All right. So what you have missed
+basically is we have used the
+convolutional 2D layer, right? We have
+missed
+convolutional
+2D here. And this entire thing will go
+into the parenthesis. And at the end you
+will have two parentheses closing
+parenthesis. And here as well there is
+some problem in L2 weight decay.
+This is regulariz
+regularizer.
+Okay. There's some problem here.
+Actually we have to remove this uh one
+parenthesis from this side and
+now this should work hopefully. Yeah
+there go. So we have created this. Now
+this is a uh you know long thing. So
+what I'll do is I'll add one batch
+normalization one more time. And this is
+model dot add
+batch
+normalization.
+Then I'll take this one more time. I'll
+copy this.
+And here I'll paste one more time.
+And then this entire thing is again this
+is the second convolution layer similar
+to the first. So I don't have to change
+anything. Then I'm going to add uh the
+pooling layer. Right? So I'm going to
+add
+first
+max pooling
+layer with
+pool size of 2 by 2. So I'll say model
+dot add then max
+pooling 2D
+it is going to say
+pool size as 2x
+2
+then
+add
+dropout layer
+with
+0.2 into
+dropout rate. So I'll say model dot add
+dropout
+then rate
+is equal to 0
+2.
+Then I'm going to add the third
+and fourth
+convolutional layers and this time I'll
+include 64 filters. So what I'm going to
+do again is I'm going to copy this two
+things
+right and paste it over here and then
+make some changes. First change is
+obviously this is
+64. I'll keep the kernels same. There's
+no point of changing the kernel. Padding
+is going to remain the same. Activation
+is going to remain the same. kernel
+regular everything is going to stay the
+same. Just one change here. I do not
+actually want the input shape here. So
+I'll have to remove this
+and I'll remove this from here as well
+and here as well because this again is
+not
+the input layer.
+All right, there you go.
+So, batch normalization. Then next again
+second max pooling layer. Same as this
+one. Again, I'll copy this.
+Make some changes.
+This is
+second max pulling layer and increase
+uh we'll increase the drop drop rate 2.3
+right and pull size it is going to
+remain the same then fifth and sixth
+pulling layer I'll copy this
+paste here This time I'm going from 64
+to 128.
+Uh everything else will remain the same.
+This is also 128
+again. Then I'll increase the drop rate
+to 0
+four.
+Okay, this is second pulling layer. And
+thereby this is
+third
+and this is going to be a size 2x2 and
+drop rate would be 0
+4.
+Okay.
+7th and eighth pulling layer. Copy this
+and put it over here.
+This is going to go to
+256
+filters
+and
+256 filters here.
+Then this is going to be
+uh one more max pooling layer that is
+going to be the fourth max pooling
+layer.
+This is
+fourth max pulling layer and
+it will have a drop rate of 0.5
+then that's it I think right then I'm
+going to flatten out right because this
+is going to be the raw output I'll have
+to flatten out
+the tensor the
+output. How you're going to do that from
+the
+previous layer? How you're going to do
+that is model dot add
+flatten.
+All right. Then you're going to add a
+fully
+connected
+layer
+with
+softmax function.
+Okay. Uh what is the job of this? To
+output the class probabilities, right?
+So I'm going to say model dot add
+dense
+give me
+10 output because 10 are the number of
+the classes and activation here
+is
+softmax.
+Hopefully this will work.
+There you go.
+Now whatever we have created let us try
+to see the architecture of that. So I'll
+say model dot summary is this.
+There you go.
+All right. So these are the parameter
+that we got. Now you can see here right
+away our model consist of 1
+uh 8 sorry 1.13
+parameter out of which 1.29 29 they are
+the uh trainable ones and non-trainable
+ones are this much let me see one more
+time if I got everything right
+I think there's some problem here the
+problem is that when you see this 16
+right so third one is 16 then 2D is 8
+here this should be 64 actually
+everything should be 64 out commit is
+32. I'll have to go back and check this
+one more time. Uh so this is having
+let me check this uh everything one more
+time. So the yeah there you can see so
+this is 32 that is this is not good
+right this is 64 just to be clear third
+and fourth layer it is 64
+isn't it and rest of the thing this is
+128
+and
+256
+looks okay to me let me just run this
+one more Fine.
+Yeah, now it looks better. You can see
+64 64 128 120 everything is fine now.
+Right. So there are one uh uh you know
+whatever this number are this is the uh
+number of parameter and after this this
+is the trainable parameter. Now this is
+a again relatively compact model
+especially when compared to advanced
+architecture which often have like tens
+and th even like millions and billions
+of parameter compared to that we just
+have this many which is still just too
+much in my opinion. Now I'm going to
+train my neural network. Now training
+happens. Uh I'll I'll be using a batch
+size of about 64 and we will run for uh
+about
+150 epochs or until the early stopping
+condition is met. Now just to be clear,
+this is still a very large model. Uh for
+running this particular cell, I'll be
+turning on the GPU and it still is going
+to take enough time. Uh so let me just
+you know uh run everything uh sorry type
+everything and then when we go to the uh
+expansion part so I'll say
+first I'm going to set
+the batch size
+that is going to be batch size that is
+going to be 64
+right then I'm going to say number of
+Epoch I'm humbly keeping it as 150.
+Again when you are you know in your free
+time you can put this to 300 about 300
+epo that would be required but for now
+I'm just keeping 150 and I'll say
+optimizer
+is equal to Adam and that is going to
+have a learning rate of very small 0.5.
+Then I'm going to compile the model with
+this optimizer and the loss function and
+the metric that is the accuracy. So
+model I'm going to compile
+say
+optimizer
+is equal to
+optimizer
+loss is
+categorical
+cross
+entropy
+matrix
+is
+accuracy
+then I'm going to add uh
+reduce LR on plateau what this is going
+to do is it is going to reduce the
+learning rate by whatever the factor
+that we define uh when the validation
+does not improve for again the number of
+uh you know whatever the number of uh
+epochs that you have right basically if
+you define uh 10 consecutive epoch then
+it is going to reduce the learning rate
+by a factor of 0.5 that is or whatever
+the factor that we define when the
+validation loss does not improve over
+consecutive epoch so I'll say this is
+reduce on plateau
+monitor
+then
+validation loss
+factor
+is equal to 0.5
+patience is 10 again 10 consecutive
+losses and minimum learning rate
+is
+01
+okay so this is again it's the optional
+part but you know I suggest that you
+include this
+especially if you go back and run this
+uh training epoch for 300 or 400 epoch
+in that case this is going to be very
+very helpful. We are not going to do it
+right now because I do not have that
+much time to train this for 300 epoch.
+Uh but you can do it at your end. Now
+just put this uh instead of 150 I'll put
+a note here. Instead of 150 run this for
+300 or maybe
+400 epoch.
+Now next is to add a early uh stopping
+call back that is going to imp it is
+going to monitor the validation loss and
+halt the training process when there was
+not there's not any improvement for a
+certain number of epochs ensuring that
+model does not waste computational
+resources and time right so this is
+going to be very important as well I'll
+say early
+stopping is equal to
+uh early
+stopping here
+and this is monitor
+equal to addition loss
+patience is I'm going to put 40
+uh and restore
+best weights is true and I'll also put a
+verbos
+verbos as one. Again this restore based
+weights it is going to ensure that the
+model weights are reset uh to the values
+from the epoch uh with it is going to be
+reset with the best value of the
+monitored quantity in this case the
+validation loss
+then I'm going to fit the model on the
+training data using the defined batch
+size number of epochs validation data
+and everything else. So let us say model
+dot fit
+it is going to say data generator
+dotflow
+is going to accept the training data set
+that is x train y train
+batch size
+batch size is equal to whatever the bat
+size that we have defined
+And
+epoch
+is equal to
+epoch
+validation data.
+Validation
+data
+is equal to
+X valid,
+Y valid.
+Okay. Then uh we have
+callbacks
+reduce LR that we have created and also
+early stopping that we have created.
+Again both of them are optional. This
+entire uh parameter that is callbacks it
+is optional and I'll set a verbose as
+two as well.
+Okay, I think we got it right. Let me
+check this uh one more time.
+Yeah. Uh there's some issue here. This
+over here. This should be somewhere
+here. And then rest of things is fine.
+At this point however uh you'll have to
+actually turn on the GPU because to uh
+train the this for 150 epoch for this
+kind of a complex data set and complex
+neural network it is going to take just
+forever if you do it on CPU. So just
+turn on the GPU by going to the runtime
+go to the change runtime and just see
+this T4 GPU make sure that you have
+clicked that uh clicked over here and
+then save it. Then you are going to just
+click on run all so that we can run the
+entire notebook.
+Okay. So uh now it is very late here but
+after I think about uh 2 and 1/2 hours
+uh I'm finally able to train my uh
+neural network. uh it was a quite uh
+extensive process really uh we and yet
+we just took uh 150 epoch uh so maybe as
+I suggested earlier that we'll have to
+go about uh 300 to 400 epoch uh you guys
+uh will have to trade uh you know much
+longer than just maybe 2 to 3 hour uh
+anyway let us see what my neural network
+is trying to tell me uh let us uh
+proceed with the findings of our neural
+network. Okay. So you can see here that
+uh uh I have got a accuracy of about 90%
+on my validation
+data uh set right so that's a good sign
+actually but uh and you can see that we
+started from the very you know quite
+less in fact we started at about uh 45
+to 54% and then we improved up to 90%.
+Now here you can also see that we have
+gone only for 150 epoch and perhaps this
+particular epoch 149 was the best
+performing uh training epoch. Anyway,
+let us try to visualize what we got. I'm
+going to generate few plots to visualize
+the training and validation losses and
+uh maybe try to see the evolution of
+both loss losses and accuracy.
+All right. So, uh I'm going to plot two
+things. I'll first, you know, set the
+figure size.
+This is fixed size is
+15 by 6.
+And then I'm going to plot the training
+and validation loss and training and
+validation accuracy. So, this is plt dot
+subplot. It is going to be row one
+column two and in that first image and
+there I'm going to plot
+model dot history
+dot history
+then
+loss
+and I'll
+label this as
+train
+loss also color code this to
+uh blue maybe
+similarly I'll try to get the validation
+losses as well I'll just make some
+changes
+there
+this is going to be not loss but
+validation loss
+And here similarly this is
+variation
+loss
+color is
+red in this case
+and I'll say plt dot legend
+is then title
+is
+log plus
+evolution.
+Okay. Anyway, let us
+copy this,
+paste it over here.
+And this is figure number two. And this
+is no longer a loss but
+accuracy.
+Let me copy this.
+Put it over here,
+here
+and
+here
+and here as well.
+This is the accuracy.
+And lastly, I'll just put a plt.show to
+have the image.
+Okay, I'll just, you know, kind of zoom
+out a bit.
+Yeah. So you can see that this is the
+plot that I'm getting. Uh based on this,
+it is quite clear that the model is
+performing well without any particular
+signs of overfitting. The conclusion is
+also supported by the close alignment of
+the training and validation accuracy and
+also the loss values throughout the
+trading process. The gap between the
+training and the validation accuracy
+remains it's it's almost you know
+minimal. You can see it is about um
+maybe 10%. Right? So the model is able
+to generalize well on the unseen data.
+Similarly, the model's loss on
+validation data follows closely to the
+training loss uh reinforcing the you
+know kind of the assertion of a good
+generalization. Therefore the model
+appears to be uh you know well
+regularized and not overfitting to the
+training data. Now
+I'm going to evaluate the optimal model
+on the test data because remember this
+is just what we have done is basically
+on the training set and the validation
+set we have to now evaluate the uh model
+on the test data.
+So for that I'm going to say
+model dot
+evaluate is going to take
+x test and
+y test x test and y test here and
+verbose
+I'm putting as one
+uh this I have to assign assign to two
+things test losses and test accuracy
+and I'll just print those two things.
+I'll say print
+uh f lit
+test accuracy
+a scurly braces
+test
+accuracy
+back slash n
+and
+then I'll say this is test
+loss
+this is going to be
+test
+loss here.
+Okay, let us run this. The test accuracy
+is again about uh 89% 90%. So with the
+test accuracy of more than 90% or about
+90% our model is able to you know
+demonstrate uh I would say exceptional
+performance on unseen data because
+remember the model is only training on a
+um you know images of 32x 32 dimensions.
+So this high accuracy achieved using a
+relatively compact model as well of
+about uh I think 1
+8 million parameter right it is uh it is
+you know remarkable it is very not
+worthy so many advanced architecture
+employ again you know tens or even even
+hundreds of millions of parameter to
+achieve similar or only slightly better
+result but the proximity of the test
+losses and accuracy to their respective
+Ive you know training counterpart that
+we got over here that signifies that our
+model is not merely you know kind of
+memorizing the training data but it is
+generally understanding the pattern and
+effectively generalizing uh from the
+training data to unseen data. So it can
+be inferred that our model it only not
+only delivers reliable prediction but
+also kind of strikes kind of that fine
+balance between the efficiency and the
+performance.
+Okay. Now to explore further
+generalizational
+uh sorry generalization capability of
+our uh of our model I'll assess its
+performance using some third party
+image. I'll just you know Google
+anything and hopefully try to do
+something. But these are all the classes
+that I have. Okay. So let me just you
+know Google one thing that is horse
+right any horse here and then I'm going
+to maybe
+just take one image
+okay there are two horses here this
+cannot be allowed because our model is
+only trained for one thing per image
+right one car per image one horse per
+image so definitely it is going to not
+perform well for me uh what I'm going to
+do is maybe just take this one here.
+There you go. Just go to this and I'll,
+you know, copy this URL. So this URL
+I'll, you know, let me just put a
+heading here first. What I'm trying to
+do is basically
+performance on an
+uh out of data set mesh. So something
+that I have you know just taken from my
+internet. So URL as a variable I'm
+putting that over here. Uh, I'll say
+URL
+library
+dot
+URL
+uh request rather request
+dot URL
+open
+and that is going to be the URL that I
+have given and I'm going to store this
+to some repository. tree and then I'm
+going to say image is equal to np do as
+array because I have to convert that to
+array to do anything whether to um you
+know fit the to the model or to uh maybe
+just visualize it then
+I'll say
+byte
+array
+then repository
+dot
+array here uh not array rather read
+because I'll just be reading this and I
+have to say data type here is the
+integer
+is going to be equal to
+cv2
+dot
+image decode
+image comma
+cv2 dot
+I am read
+and I'm looking for something unchanged.
+There we go.
+Then I have to convert this to BGR2 RGB
+because remember my CVT uh CV2 is going
+to display uh in uh it takes in the
+format BGR and my MET plot lip it is
+going to take in RGB. So I have to say
+CV2
+dot
+CV2 color
+image CV2 dot
+color
+PGR
+to RGB
+and that I'm going to assign
+to image again. So this particular step
+is nothing but
+convert the image. It is converting the
+image from BGR to RGB. Basically blue,
+green, red to red, clean blue. Let me
+tell this.
+Oh, okay.
+Apparently this is something that we
+cannot open. So we'll have to look for
+something else. Um
+let us take some other image. Hopefully
+I can take
+this one.
+Right.
+So copy this the URL and put it over
+here.
+Run that.
+Okay, gone through. Uh, let us display
+the image whatever we got. So, plt dot
+I'm show
+is going to be the image and I'll say
+plt dot
+show here.
+Okay, there you go. So, this is the
+image that I'm getting right now.
+Remember this image, it is having some
+dimension. What? What that dimension is?
+Image dot shape. it is this uh you know
+height uh width this is this height and
+this many color channels not useful for
+us because remember my model is trained
+for a 32x 32 pixel data set so we need
+to pre-process it in the same way as we
+did with the training in test data and
+basically what I'm trying to do is I'll
+say image equal to
+cv2 dot
+Resize
+image
+32x 32
+right then I'm going to normalize the
+image because remember my
+model is trained on the normalized
+images only. So image is going to be
+image minus mean that I have calculated
+divided by standard deviation
+plus some very very very small number
+remember to uh avoid the possibility of
+getting divided by zero
+then I'm going to add an
+extra
+dimension
+Why?
+Because the model expects a batch of
+image, right?
+So we had a batch of 64 remember. So uh
+we do not have any batch here. We just
+have one image. But that two has to be
+in the batch. A batch of just one image.
+Thereby I'll say image is equal to
+image dot reshape
+1 3 2 3 2 3.
+Okay. So this is the image that I have.
+Now let us make the prediction. I'll say
+predict
+equal to model
+dot predict and pass in the image here.
+So this prediction will be a 10 element
+probability vector. That is if I say
+predict and you see this
+you can see it is nothing but the
+probabilities. The prediction here is
+the 10 element probability vector. And
+to get the predicted class all I have to
+do is find the index with the maximum
+value. So I'll say prediction and dot
+argument max here. There we go. So I'm
+getting seven. And if you just pass in
+the class name for this
+class names
+and this entire thing
+over here you can see it is giving me
+the horse right. and make it rather
+professional. I'll say the
+predicted class
+then curly braces.
+There you go. Right now you can change
+any other uh you can take any other URL
+as well. Maybe if I just say some other
+classes are uh deer right? So dear let
+us say now deer maybe let us say some
+sort of bird because bird can be
+anything. So let us try to test our
+model really to its limit. Let us put
+some random bird and try to get what I'm
+getting. So I'll put this image here.
+You can take any other image if you want
+to.
+Okay,
+there we go. So, I'll copy this and put
+it over here. In fact, I'll comment this
+out.
+And there we go, the new URL. So, this
+URL happens to be this bird that we have
+just got. And this is the shape of the
+image which I'm going to convert to 32x
+32 by N3. Then predicted. See the
+result. You can see it is a bird. Right?
+So my model is also predicting as a
+bird. Now you can put many other image.
+Maybe try to put a rather complex image
+that is at your disposal. Okay. So there
+we go. This is the end of this
+particular project. It was very very
+complex project. Not really that complex
+but especially people who are trying to
+learn uh convolutional neural network it
+was particularly a difficult project for
+them. So I hope that you have followed
+along and yes the training it is going
+to take some time. You have to be
+patient and remember the training that I
+did it was on GPU right? So on obviously
+the GPU that is being provided by the
+Google collab. So, and yet it took about
+2 to 3 hour to uh train the model. Uh
+but it was quite interesting for me as
+well. With that, it's time for me to you
+know uh put an end to this video and
+maybe we'll meet in the next one. Thank
+you and goodbye.
