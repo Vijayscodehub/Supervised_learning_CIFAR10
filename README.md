@@ -278,6 +278,9 @@ Supervised_learning_CIFAR10/
 │   └── utils.py
 ├── configs/
 │   └── baseline.yaml
+├── splits/
+│   ├── cifar10_train_val_seed42.json
+│   └── cifar10_train_val_seed42.npz
 ├── checkpoints/
 ├── runs/
 └── reports/

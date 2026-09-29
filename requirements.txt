@@ -5,6 +5,7 @@
 
 torch
 torchvision
+numpy
 tensorboard
 matplotlib
 scikit-learn
