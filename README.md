@@ -139,6 +139,8 @@ Create `DataLoader` objects with:
 - A configurable batch size, initially `128` for training and `256` for evaluation.
 - A configurable number of workers.
 
+The split-aware datasets and loaders are defined in `src/data.py`.
+
 ### 6. Establish a Baseline
 
 Build a small CNN yourself. Begin with two convolution blocks:
