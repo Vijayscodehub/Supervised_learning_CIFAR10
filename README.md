@@ -166,6 +166,8 @@ nn.Linear
 
 Do not apply softmax inside the model when using `nn.CrossEntropyLoss`; it expects raw logits.
 
+The CNN baseline is defined in `src/model.py`.
+
 ### 7. Write the Training Loop
 
 Write the loop yourself rather than using a high-level trainer:
