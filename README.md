@@ -126,6 +126,8 @@ Avoid vertical flips because upside-down objects are not representative of norma
 
 With PyTorch `nn.CrossEntropyLoss`, labels should remain class integers from `0` to `9`. Do not one-hot encode labels.
 
+The training and evaluation transforms are defined in `src/data.py`.
+
 ### 5. Build Datasets and DataLoaders
 
 Create PyTorch `Dataset` objects for training, validation, and test data.
