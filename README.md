@@ -182,6 +182,16 @@ for images, labels in train_loader:
     optimizer.step()
 ```
 
+This step teaches the full optimization process behind a CNN classifier:
+
+- Set the model to training mode so layers like dropout behave correctly.
+- Pull the next batch from the `DataLoader`.
+- Zero the gradients so old values do not accumulate across batches.
+- Run the forward pass to compute logits.
+- Compute the loss between predictions and the true class labels.
+- Call `loss.backward()` to compute gradients for each weight and bias.
+- Update parameters with `optimizer.step()`.
+
 For the baseline, use:
 
 - Loss: `nn.CrossEntropyLoss()`.
@@ -189,6 +199,8 @@ For the baseline, use:
 - Initial learning rate: `1e-3`.
 - Training length: start with 20 to 30 epochs.
 - Checkpoint: save the model with the best validation accuracy or lowest validation loss.
+
+The training loop for this project is implemented in `src/train.py`.
 
 ### 8. Write the Validation Loop
 
