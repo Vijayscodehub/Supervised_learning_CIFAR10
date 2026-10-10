@@ -1,4 +1,6 @@
-"""Train the CIFAR-10 CNN and validate after one epoch."""
+"""Train the CIFAR-10 CNN for multiple epochs and save the best model."""
+from pathlib import Path
+
 import torch
 
 # `nn` contains neural-network layers and loss functions.
@@ -9,6 +11,9 @@ from torch.utils.data import DataLoader
 # These imports use our own project files.
 from src.data import build_dataloaders
 from src.model import SmallCNN
+
+NUM_EPOCHS = 20
+CHECKPOINT_PATH = Path(__file__).resolve().parents[1] / "checkpoints" / "best_model.pt"
 
 
 def get_device() -> torch.device:
@@ -121,8 +126,21 @@ def validate_one_epoch(
     }
 
 
+def save_checkpoint(model: nn.Module, epoch: int, validation_accuracy: float) -> None:
+    # Save the weights from the epoch with the best validation accuracy.
+    CHECKPOINT_PATH.parent.mkdir(exist_ok=True)
+    torch.save(
+        {
+            "epoch": epoch,
+            "model_state_dict": model.state_dict(),
+            "validation_accuracy": validation_accuracy,
+        },
+        CHECKPOINT_PATH,
+    )
+
+
 def main() -> None:
-    # Train once, then measure performance on separate validation images.
+    # Train and validate repeatedly, keeping the best validation model.
     device = get_device()
 
     train_loader, validation_loader, _ = build_dataloaders()
@@ -138,29 +156,27 @@ def main() -> None:
     # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate.
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
-    training_metrics = train_one_epoch(
-        model=model,
-        train_loader=train_loader,
-        loss_function=loss_function,
-        optimizer=optimizer,
-        device=device,
-    )
-
-    validation_metrics = validate_one_epoch(
-        model=model,
-        validation_loader=validation_loader,
-        loss_function=loss_function,
-        device=device,
-    )
-
-    # An f-string starts with `f` and inserts values inside `{...}`.
-    # `:.4f` shows loss with four decimal places; `:.2%` shows accuracy as a
-    # percentage with two decimal places. Dictionary values use `metrics[...]`.
     print(f"Using device: {device}")
-    print(f"Training loss: {training_metrics['loss']:.4f}")
-    print(f"Training accuracy: {training_metrics['accuracy']:.2%}")
-    print(f"Validation loss: {validation_metrics['loss']:.4f}")
-    print(f"Validation accuracy: {validation_metrics['accuracy']:.2%}")
+    best_validation_accuracy = 0.0
+
+    for epoch in range(1, NUM_EPOCHS + 1):
+        training_metrics = train_one_epoch(
+            model, train_loader, loss_function, optimizer, device
+        )
+        validation_metrics = validate_one_epoch(
+            model, validation_loader, loss_function, device
+        )
+
+        print(f"Epoch {epoch}/{NUM_EPOCHS}")
+        print(f"Training loss: {training_metrics['loss']:.4f}")
+        print(f"Training accuracy: {training_metrics['accuracy']:.2%}")
+        print(f"Validation loss: {validation_metrics['loss']:.4f}")
+        print(f"Validation accuracy: {validation_metrics['accuracy']:.2%}")
+
+        if validation_metrics["accuracy"] > best_validation_accuracy:
+            best_validation_accuracy = validation_metrics["accuracy"]
+            save_checkpoint(model, epoch, best_validation_accuracy)
+            print(f"Saved best model: {CHECKPOINT_PATH}")
 
 
 if __name__ == "__main__":
