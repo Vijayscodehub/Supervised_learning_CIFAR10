@@ -7,6 +7,7 @@ import torch
 from torch import nn
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 # These imports use our own project files.
 from src.data import build_dataloaders
@@ -14,6 +15,7 @@ from src.model import SmallCNN
 
 NUM_EPOCHS = 20
 CHECKPOINT_PATH = Path(__file__).resolve().parents[1] / "checkpoints" / "best_model.pt"
+RUNS_DIR = Path(__file__).resolve().parents[1] / "runs" / "baseline"
 
 
 def get_device() -> torch.device:
@@ -156,6 +158,9 @@ def main() -> None:
     # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate.
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
+    # TensorBoard writes one point for each metric after every epoch.
+    writer = SummaryWriter(log_dir=RUNS_DIR)
+
     print(f"Using device: {device}")
     best_validation_accuracy = 0.0
 
@@ -173,10 +178,18 @@ def main() -> None:
         print(f"Validation loss: {validation_metrics['loss']:.4f}")
         print(f"Validation accuracy: {validation_metrics['accuracy']:.2%}")
 
+        writer.add_scalar("Loss/train", training_metrics["loss"], epoch)
+        writer.add_scalar("Loss/validation", validation_metrics["loss"], epoch)
+        writer.add_scalar("Accuracy/train", training_metrics["accuracy"], epoch)
+        writer.add_scalar("Accuracy/validation", validation_metrics["accuracy"], epoch)
+        writer.add_scalar("Learning rate", optimizer.param_groups[0]["lr"], epoch)
+
         if validation_metrics["accuracy"] > best_validation_accuracy:
             best_validation_accuracy = validation_metrics["accuracy"]
             save_checkpoint(model, epoch, best_validation_accuracy)
             print(f"Saved best model: {CHECKPOINT_PATH}")
+
+    writer.close()
 
 
 if __name__ == "__main__":
