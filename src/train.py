@@ -1,4 +1,4 @@
-"""Train the CIFAR-10 CNN for one complete pass through the training data."""
+"""Train the CIFAR-10 CNN and validate after one epoch."""
 import torch
 
 # `nn` contains neural-network layers and loss functions.
@@ -86,13 +86,46 @@ def train_one_epoch(
     }
 
 
+def validate_one_epoch(
+    model: nn.Module,
+    validation_loader: DataLoader,
+    loss_function: nn.Module,
+    device: torch.device,
+) -> dict[str, float]:
+    # Evaluate on validation data without changing the model's weights.
+    model.eval()
+
+    total_loss = 0.0
+    total_correct = 0
+    total_examples = 0
+
+    with torch.no_grad():
+        for images, labels in validation_loader:
+            images = images.to(device)
+            labels = labels.to(device)
+
+            logits = model(images)
+            loss = loss_function(logits, labels)
+
+            batch_size = labels.size(0)
+            total_loss += loss.item() * batch_size
+
+            predictions = torch.argmax(logits, dim=1)
+            total_correct += (predictions == labels).sum().item()
+            total_examples += batch_size
+
+    # Return average loss and accuracy across every validation image.
+    return {
+        "loss": total_loss / total_examples,
+        "accuracy": total_correct / total_examples,
+    }
+
+
 def main() -> None:
-    # `main` collects the steps needed to run one whole training epoch.
+    # Train once, then measure performance on separate validation images.
     device = get_device()
 
-    # `_` means this value is intentionally unused here. We only train now,
-    # so validation and test loaders will be used in later milestones.
-    train_loader, _, _ = build_dataloaders()
+    train_loader, validation_loader, _ = build_dataloaders()
 
     # Create a new CNN with random initial weights and biases, then move all
     # its parameters to the selected device with `.to(device)`.
@@ -105,7 +138,7 @@ def main() -> None:
     # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate.
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
-    metrics = train_one_epoch(
+    training_metrics = train_one_epoch(
         model=model,
         train_loader=train_loader,
         loss_function=loss_function,
@@ -113,12 +146,21 @@ def main() -> None:
         device=device,
     )
 
+    validation_metrics = validate_one_epoch(
+        model=model,
+        validation_loader=validation_loader,
+        loss_function=loss_function,
+        device=device,
+    )
+
     # An f-string starts with `f` and inserts values inside `{...}`.
     # `:.4f` shows loss with four decimal places; `:.2%` shows accuracy as a
     # percentage with two decimal places. Dictionary values use `metrics[...]`.
     print(f"Using device: {device}")
-    print(f"Training loss: {metrics['loss']:.4f}")
-    print(f"Training accuracy: {metrics['accuracy']:.2%}")
+    print(f"Training loss: {training_metrics['loss']:.4f}")
+    print(f"Training accuracy: {training_metrics['accuracy']:.2%}")
+    print(f"Validation loss: {validation_metrics['loss']:.4f}")
+    print(f"Validation accuracy: {validation_metrics['accuracy']:.2%}")
 
 
 if __name__ == "__main__":
