@@ -15,7 +15,11 @@ SPLIT_PATH = PROJECT_ROOT / "splits" / "cifar10_train_val_seed42.npz"
 #Train transform      = random augmentation + conversion + normalization
 #Evaluation transform = conversion + normalization only
 
-def build_train_transform() -> transforms.Compose:
+def build_train_transform(use_augmentation: bool = True) -> transforms.Compose:
+    # This experiment can turn crop and flip off while keeping normalization.
+    if not use_augmentation:
+        return build_evaluation_transform()
+
     return transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
@@ -43,13 +47,13 @@ def load_split_indices() -> tuple[np.ndarray, np.ndarray]:
     return train_indices, validation_indices
 
 
-def build_datasets() -> tuple[Subset, Subset, CIFAR10]:
+def build_datasets(use_augmentation: bool = True) -> tuple[Subset, Subset, CIFAR10]:
     train_indices, validation_indices = load_split_indices()
 
     train_base_dataset = CIFAR10(
         root=DATA_DIR,
         train=True,
-        transform=build_train_transform(),
+        transform=build_train_transform(use_augmentation),
         download=False,
     )
     validation_base_dataset = CIFAR10(
@@ -75,8 +79,9 @@ def build_dataloaders(
     train_batch_size: int = 128,
     evaluation_batch_size: int = 256,
     num_workers: int = 0,
+    use_augmentation: bool = True,
 ) -> tuple[DataLoader, DataLoader, DataLoader]:
-    train_dataset, validation_dataset, test_dataset = build_datasets()
+    train_dataset, validation_dataset, test_dataset = build_datasets(use_augmentation)
 
     train_loader = DataLoader(
         train_dataset,

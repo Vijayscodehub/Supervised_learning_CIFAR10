@@ -14,8 +14,11 @@ from src.data import build_dataloaders
 from src.model import SmallCNN
 
 NUM_EPOCHS = 20
-CHECKPOINT_PATH = Path(__file__).resolve().parents[1] / "checkpoints" / "best_model.pt"
-RUNS_DIR = Path(__file__).resolve().parents[1] / "runs" / "baseline"
+EXPERIMENT_NAME = "no_augmentation"
+USE_AUGMENTATION = False
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+CHECKPOINT_PATH = PROJECT_ROOT / "checkpoints" / EXPERIMENT_NAME / "best_model.pt"
+RUNS_DIR = PROJECT_ROOT / "runs" / EXPERIMENT_NAME
 
 
 def get_device() -> torch.device:
@@ -145,7 +148,10 @@ def main() -> None:
     # Train and validate repeatedly, keeping the best validation model.
     device = get_device()
 
-    train_loader, validation_loader, _ = build_dataloaders()
+    # Experiment 1 removes crop and flip; all other settings stay unchanged.
+    train_loader, validation_loader, _ = build_dataloaders(
+        use_augmentation=USE_AUGMENTATION
+    )
 
     # Create a new CNN with random initial weights and biases, then move all
     # its parameters to the selected device with `.to(device)`.
@@ -161,6 +167,8 @@ def main() -> None:
     # TensorBoard writes one point for each metric after every epoch.
     writer = SummaryWriter(log_dir=RUNS_DIR)
 
+    print(f"Experiment: {EXPERIMENT_NAME}")
+    print(f"Using augmentation: {USE_AUGMENTATION}")
     print(f"Using device: {device}")
     best_validation_accuracy = 0.0
 

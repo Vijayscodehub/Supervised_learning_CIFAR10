@@ -243,8 +243,8 @@ Use validation results only. Create a small experiment table like this:
 
 | ID | Change | Validation result | What it tells us |
 | --- | --- | --- | --- |
-| 0 | Baseline CNN, no augmentation | | Baseline performance |
-| 1 | Add crop and horizontal flip | | Does basic augmentation help? |
+| 0 | Crop and horizontal-flip augmentation | 76.82% accuracy, Epoch 19 | Current best result |
+| 1 | No augmentation | 74.22% accuracy, Epoch 8 | Augmentation improved validation accuracy |
 | 2 | Change learning rate | | Is optimization more stable? |
 | 3 | Add or change dropout | | Does regularization help? |
 | 4 | Compare AdamW and SGD with momentum | | Does optimizer choice matter? |
