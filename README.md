@@ -243,11 +243,12 @@ Use validation results only. Create a small experiment table like this:
 
 | ID | Change | Validation result | What it tells us |
 | --- | --- | --- | --- |
-| 0 | Crop and horizontal-flip augmentation | 76.82% accuracy, Epoch 19 | Current best result |
+| 0 | Crop and horizontal-flip augmentation | 77.66% accuracy, Epoch 20 | Augmented baseline |
 | 1 | No augmentation | 74.22% accuracy, Epoch 8 | Augmentation improved validation accuracy |
-| 2 | Change learning rate | | Is optimization more stable? |
-| 3 | Add or change dropout | | Does regularization help? |
-| 4 | Compare AdamW and SGD with momentum | | Does optimizer choice matter? |
+| 2 | Seeded crop and horizontal-flip baseline, learning rate 0.001 | 77.74% accuracy, Epoch 20 | Reference run for learning-rate comparison |
+| 3 | Change learning rate | | Is optimization more stable? |
+| 4 | Add or change dropout | | Does regularization help? |
+| 5 | Compare AdamW and SGD with momentum | | Does optimizer choice matter? |
 
 Do not change many things in one experiment. Each run should answer one clear question.
 

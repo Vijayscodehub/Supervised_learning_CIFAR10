@@ -1,4 +1,5 @@
 """Train the CIFAR-10 CNN for multiple epochs and save the best model."""
+import json
 from pathlib import Path
 
 import torch
@@ -14,10 +15,13 @@ from src.data import build_dataloaders
 from src.model import SmallCNN
 
 NUM_EPOCHS = 20
-EXPERIMENT_NAME = "no_augmentation"
-USE_AUGMENTATION = False
+LEARNING_RATE = 1e-3
+EXPERIMENT_NAME = "augmented_lr_1e-3_seed42"
+USE_AUGMENTATION = True
+SEED = 42
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CHECKPOINT_PATH = PROJECT_ROOT / "checkpoints" / EXPERIMENT_NAME / "best_model.pt"
+RESULT_PATH = CHECKPOINT_PATH.with_name("best_result.json")
 RUNS_DIR = PROJECT_ROOT / "runs" / EXPERIMENT_NAME
 
 
@@ -131,24 +135,40 @@ def validate_one_epoch(
     }
 
 
-def save_checkpoint(model: nn.Module, epoch: int, validation_accuracy: float) -> None:
-    # Save the weights from the epoch with the best validation accuracy.
-    CHECKPOINT_PATH.parent.mkdir(exist_ok=True)
+def save_checkpoint(
+    model: nn.Module,
+    epoch: int,
+    training_metrics: dict[str, float],
+    validation_metrics: dict[str, float],
+) -> None:
+    # Save the best weights and a readable summary of that epoch's results.
+    CHECKPOINT_PATH.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
         {
             "epoch": epoch,
             "model_state_dict": model.state_dict(),
-            "validation_accuracy": validation_accuracy,
+            "validation_accuracy": validation_metrics["accuracy"],
         },
         CHECKPOINT_PATH,
     )
+    result = {
+        "experiment_name": EXPERIMENT_NAME,
+        "seed": SEED,
+        "learning_rate": LEARNING_RATE,
+        "use_augmentation": USE_AUGMENTATION,
+        "epoch": epoch,
+        "training": training_metrics,
+        "validation": validation_metrics,
+    }
+    RESULT_PATH.write_text(json.dumps(result, indent=2) + "\n")
 
 
 def main() -> None:
     # Train and validate repeatedly, keeping the best validation model.
     device = get_device()
+    torch.manual_seed(SEED)
 
-    # Experiment 1 removes crop and flip; all other settings stay unchanged.
+    # Keep crop and flip enabled while comparing learning rates.
     train_loader, validation_loader, _ = build_dataloaders(
         use_augmentation=USE_AUGMENTATION
     )
@@ -162,7 +182,7 @@ def main() -> None:
 
     # `model.parameters()` supplies every learnable weight and bias to AdamW.
     # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate.
-    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
     # TensorBoard writes one point for each metric after every epoch.
     writer = SummaryWriter(log_dir=RUNS_DIR)
@@ -194,7 +214,7 @@ def main() -> None:
 
         if validation_metrics["accuracy"] > best_validation_accuracy:
             best_validation_accuracy = validation_metrics["accuracy"]
-            save_checkpoint(model, epoch, best_validation_accuracy)
+            save_checkpoint(model, epoch, training_metrics, validation_metrics)
             print(f"Saved best model: {CHECKPOINT_PATH}")
 
     writer.close()
