@@ -15,8 +15,8 @@ from src.data import build_dataloaders
 from src.model import SmallCNN
 
 NUM_EPOCHS = 20
-LEARNING_RATE = 1e-3
-EXPERIMENT_NAME = "augmented_lr_1e-3_seed42"
+LEARNING_RATE = 3e-4
+EXPERIMENT_NAME = "augmented_lr_3e-4_seed42"
 USE_AUGMENTATION = True
 SEED = 42
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -181,7 +181,7 @@ def main() -> None:
     loss_function = nn.CrossEntropyLoss()
 
     # `model.parameters()` supplies every learnable weight and bias to AdamW.
-    # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate.
+    # `lr=1e-3` is a keyword argument; 1e-3 means 0.001, the learning rate and 3e-4 means 0.0003.
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
 
     # TensorBoard writes one point for each metric after every epoch.
