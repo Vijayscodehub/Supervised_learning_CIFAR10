@@ -1,0 +1,9 @@
+{
+  "checkpoint": "/home/qtg6528/AI/scratch_projects/Supervised_learning_CIFAR10/checkpoints/augmented_dropout0_0_1e-3_seed42/best_model.pt",
+  "checkpoint_epoch": 17,
+  "checkpoint_validation_accuracy": 0.7788,
+  "test": {
+    "loss": 0.6541382164478302,
+    "accuracy": 0.7757
+  }
+}

@@ -276,6 +276,14 @@ After selecting the final configuration using validation data:
 
 The test result estimates how well the final chosen model generalizes to unseen CIFAR-10 data.
 
+Final test result:
+
+```text
+Selected checkpoint: augmented_dropout0_0_1e-3_seed42, Epoch 17
+Test loss: 0.6541
+Test accuracy: 77.57%
+```
+
 ### 12. Analyze Errors
 
 Accuracy is not enough. Create:
