@@ -15,8 +15,8 @@ from src.data import build_dataloaders
 from src.model import SmallCNN
 
 NUM_EPOCHS = 20
-LEARNING_RATE = 3e-4
-EXPERIMENT_NAME = "augmented_lr_3e-4_seed42"
+LEARNING_RATE = 1e-3
+EXPERIMENT_NAME = "augmented_dropout0_0_1e-3_seed42"
 USE_AUGMENTATION = True
 SEED = 42
 PROJECT_ROOT = Path(__file__).resolve().parents[1]

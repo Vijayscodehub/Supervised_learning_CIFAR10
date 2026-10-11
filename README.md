@@ -246,11 +246,24 @@ Use validation results only. Create a small experiment table like this:
 | 0 | Crop and horizontal-flip augmentation | 77.66% accuracy, Epoch 20 | Augmented baseline |
 | 1 | No augmentation | 74.22% accuracy, Epoch 8 | Augmentation improved validation accuracy |
 | 2 | Seeded crop and horizontal-flip baseline, learning rate 0.001 | 77.74% accuracy, Epoch 20 | Reference run for learning-rate comparison |
-| 3 | Change learning rate | lr 0.0003 - 74.18% accuracy, Epoch	18 | Is optimization more stable?  - worsened|
-| 4 | Add or change dropout | | Does regularization help? |
+| 3 | Learning rate 0.0003 | 74.18% accuracy, Epoch 18 | Lower learning rate learned too slowly |
+| 4 | Remove dropout, p=0.0 | 77.88% accuracy, Epoch 17 | Slightly better than dropout p=0.3 |
 | 5 | Compare AdamW and SGD with momentum | | Does optimizer choice matter? |
 
 Do not change many things in one experiment. Each run should answer one clear question.
+
+### Selected Validation Configuration
+
+After comparing experiments using validation data, select this configuration:
+
+```text
+Augmentation: crop and horizontal flip
+Learning rate: 0.001
+Dropout: 0.0
+Seed: 42
+Best validation accuracy: 77.88%, Epoch 17
+Checkpoint: checkpoints/augmented_dropout0_0_1e-3_seed42/best_model.pt
+```
 
 ### 11. Perform One Final Test Evaluation
 

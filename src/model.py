@@ -16,7 +16,7 @@ class SmallCNN(nn.Module):
         self.classifier = nn.Sequential(
             nn.Linear(64 * 8 * 8, 256),
             nn.ReLU(),
-            nn.Dropout(p=0.3),
+            nn.Dropout(p=0.0),
             nn.Linear(256, num_classes),
         )
 
