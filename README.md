@@ -1,367 +1,377 @@
-# CIFAR-10 Supervised Learning Project
+<div align="center">
 
-## Goal
+# 🖼️ CIFAR-10 Image Classification with a CNN Built from Scratch
 
-Build a complete, reproducible image-classification experiment using CIFAR-10 and PyTorch. The goal is not only to train a CNN, but to understand the entire supervised-learning workflow:
+**A reproducible supervised-learning workflow in PyTorch: a hand-designed CNN, a hand-written training loop, validation-only model selection and a single honest test evaluation.**
 
-```text
-Data -> split -> preprocessing -> model -> training -> validation
-     -> hyperparameter selection -> final test -> error analysis
+![Python](https://img.shields.io/badge/python-3.x-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-CPU-EE4C2C?logo=pytorch&logoColor=white)
+![Pretrained](https://img.shields.io/badge/pretrained%20weights-none-lightgrey)
+![Test accuracy](https://img.shields.io/badge/test%20accuracy-77.57%25-2ea44f)
+![Macro F1](https://img.shields.io/badge/macro%20F1-77.40%25-2ea44f)
+
+<img src="reports/figures/readme/cifar10_samples.png" alt="Ten random CIFAR-10 training images for each of the ten classes" width="85%">
+
+</div>
+
+---
+
+## Results at a glance
+
+| | |
+| --- | --- |
+| **Test accuracy** | **77.57%**, or 7,757 of 10,000 untouched test images |
+| **Test loss** | 0.6541 |
+| **Macro F1** | 77.40% |
+| **Best validation accuracy** | 77.88% at epoch 17, the checkpoint used for test |
+| **Model** | 2-conv-block CNN, **1.07 M parameters**, random initialisation |
+| **Easiest class / hardest class** | automobile (F1 88.2%) / cat (F1 59.1%) |
+| **Biggest confusion** | cat ↔ dog: 160 cats called dogs and 164 dogs called cats |
+
+> The validation accuracy (77.88%) and the test accuracy (77.57%) are only 0.31 points apart. That suggests the validation-only model selection didn't overfit the validation set.
+
+---
+
+## Contents
+
+- [What this project is (and is not)](#what-this-project-is-and-is-not)
+- [Workflow](#workflow)
+- [Dataset and splits](#dataset-and-splits)
+- [Preprocessing and augmentation](#preprocessing-and-augmentation)
+- [Model](#model)
+- [Training](#training)
+- [Experiments](#experiments)
+- [Final test evaluation](#final-test-evaluation)
+- [Error analysis](#error-analysis)
+- [Reproduce](#reproduce)
+- [Repository layout](#repository-layout)
+- [Key concepts](#key-concepts)
+- [Limitations and next steps](#limitations-and-next-steps)
+
+---
+
+## What this project is (and is not)
+
+| ✅ It is | ❌ It is not |
+| --- | --- |
+| A CNN designed by hand from `Conv2d`, `ReLU`, `MaxPool2d`, `Dropout` and `Linear` | A pretrained ResNet, YOLO or transfer-learning project |
+| A training and validation loop written by hand | `model.fit()`, Lightning, or a one-command trainer |
+| A reproducible, seeded, stratified 45k / 5k / 10k protocol | Tuning on the test set |
+| Experiments that change one variable at a time, tracked in TensorBoard | Manual backpropagation (PyTorch autograd computes the gradients) |
+
+The aim is to learn the full, reliable machine-learning workflow around a neural network, not just to get one accuracy number.
+
+---
+
+## Workflow
+
+```mermaid
+flowchart LR
+    A["CIFAR-10<br/>60,000 images"] --> B["Stratified split<br/>seed 42"]
+    B --> C["Train 45,000"]
+    B --> D["Validation 5,000"]
+    A --> E["Test 10,000<br/>🔒 untouched"]
+    C --> F["Train CNN<br/>20 epochs"]
+    F --> G["Validate each epoch<br/>keep best checkpoint"]
+    D --> G
+    G --> H["Compare experiments<br/>on validation only"]
+    H --> I["Freeze best config"]
+    I --> J["Evaluate once<br/>on test"]
+    E --> J
+    J --> K["Error analysis"]
+
+    classDef lock fill:#fdecea,stroke:#d64545,color:#1f2933
+    classDef sel fill:#1a9e8f,stroke:#137a6e,color:#fff
+    class E lock
+    class I,J sel
 ```
 
-At the end, you should be able to explain:
+---
 
-> I defined the problem, created a reproducible train/validation/test protocol, trained a CNN that I designed, selected decisions using validation data, evaluated once on untouched test data, and analyzed where the model failed.
+## Dataset and splits
 
-## What This Project Is
+CIFAR-10 has 60,000 colour images of **3 × 32 × 32** pixels in 10 balanced classes: airplane, automobile, bird, cat, deer, dog, frog, horse, ship and truck.
 
-- A PyTorch project.
-- A CNN that you define yourself with convolution, pooling, dropout, and fully connected layers.
-- A manually written training loop and validation loop.
-- A reproducible experiment with TensorBoard tracking.
+| Split | Images | Per class | Purpose |
+| --- | ---: | ---: | --- |
+| Training | 45,000 | 4,500 | Learn weights and biases |
+| Validation | 5,000 | 500 | Choose architecture, learning rate, augmentation, dropout and stopping epoch |
+| Test | 10,000 | 1,000 | **One** final evaluation after the configuration is frozen |
 
-## What This Project Is Not
+- The 50,000 official training images are split with a **stratified, seeded (42)** split. The indices are saved to [`splits/`](splits/) so every run uses exactly the same images.
+- CIFAR-10 images are independent examples, so a random stratified split is fine. With video or driving data you would split by scene or sequence instead, to avoid leakage.
+- Exploration notebook: [`notebooks/01_data_exploration.ipynb`](notebooks/01_data_exploration.ipynb). It covers image shape and pixel ranges, random sample grids and class balance.
 
-- Not a pretrained model, YOLO, ResNet, or transfer-learning project.
-- Not an Ultralytics-style one-command training workflow.
-- Not a TensorFlow/Keras `model.fit()` project.
-- Not a fully manual backpropagation implementation.
+---
 
-PyTorch will calculate gradients and update parameters when you call:
+## Preprocessing and augmentation
 
-```python
-loss.backward()
-optimizer.step()
+| | Training | Validation / test |
+| --- | :---: | :---: |
+| `ToTensor()` | ✅ | ✅ |
+| `RandomCrop(32, padding=4)` | ✅ | — |
+| `RandomHorizontalFlip()` | ✅ | — |
+| `Normalize(mean=(0.4914, 0.4822, 0.4465), std=(0.2470, 0.2435, 0.2616))` | ✅ | ✅ |
+
+<img src="reports/figures/readme/augmentation_examples.png" alt="Original CIFAR-10 images next to five random crop and flip augmentations" width="75%">
+
+Vertical flips are deliberately left out, because upside-down objects aren't representative of CIFAR-10. Labels stay as integers 0–9, with no one-hot encoding, as `nn.CrossEntropyLoss` expects.
+
+---
+
+## Model
+
+`SmallCNN` in [`src/model.py`](src/model.py) has two convolution blocks followed by a two-layer classifier. It outputs raw logits, with no softmax inside the model.
+
+```mermaid
+flowchart LR
+    I["Input<br/>3×32×32"] --> C1["Conv 3×3, 32<br/>+ ReLU"] --> P1["MaxPool 2×2<br/>32×16×16"]
+    P1 --> C2["Conv 3×3, 64<br/>+ ReLU"] --> P2["MaxPool 2×2<br/>64×8×8"]
+    P2 --> FL["Flatten<br/>4,096"] --> FC1["Linear 256<br/>+ ReLU"] --> DO["Dropout<br/>p = 0.0"] --> FC2["Linear 10<br/>logits"]
 ```
 
-A later NumPy MLP project will manually create weights and biases, calculate gradients, and implement gradient descent. This project teaches the reliable ML workflow around a neural network.
+| Layer | Output shape | Parameters |
+| --- | --- | ---: |
+| Conv2d(3 → 32, 3×3) + ReLU + MaxPool | 32 × 16 × 16 | 896 |
+| Conv2d(32 → 64, 3×3) + ReLU + MaxPool | 64 × 8 × 8 | 18,496 |
+| Linear(4096 → 256) + ReLU + Dropout | 256 | 1,048,832 |
+| Linear(256 → 10) | 10 | 2,570 |
+| **Total** | | **1,070,794** |
 
-## Dataset
+Almost 98% of the parameters sit in the first fully connected layer.
 
-CIFAR-10 contains 60,000 color images of shape `3 x 32 x 32` across 10 classes:
+---
 
-```text
-airplane, automobile, bird, cat, deer,
-dog, frog, horse, ship, truck
-```
+## Training
 
-The official dataset has:
-
-```text
-50,000 training images
-10,000 test images
-```
-
-Use the supplied training images to make a reproducible split:
-
-```text
-50,000 official training images
-    -> 45,000 training images
-    ->  5,000 validation images
-
-10,000 official test images
-    -> untouched until final evaluation
-```
-
-CIFAR-10 images are independent examples, so a random stratified split is appropriate. For video or driving data, you would split by scene or sequence instead to prevent leakage.
-
-## Learning Objectives
-
-By the end, you should understand:
-
-- The distinct purposes of training, validation, and test data.
-- Why the test set must not guide architecture or hyperparameter choices.
-- How to create a PyTorch `Dataset` and `DataLoader`.
-- How images are normalized and augmented.
-- How a CNN converts an image into class scores.
-- What cross-entropy loss, an optimizer, batches, epochs, and learning rate do.
-- How to read training and validation curves.
-- How to detect underfitting and overfitting.
-- How to evaluate a classifier beyond one accuracy number.
-
-## Project Milestones
-
-### 1. Set Up the Environment
-
-Create a Python environment with PyTorch, Torchvision, TensorBoard, Matplotlib, Scikit-learn, and Pandas.
-
-Confirm whether CUDA is available, but make the project work on CPU too.
-
-### 2. Explore the Dataset
-
-Before training, create a notebook that:
-
-- Displays a grid of sample images and labels.
-- Confirms image shape and label format.
-- Counts the examples in every class.
-- Shows why the problem is challenging: images are small and several classes are visually similar, such as cats versus dogs and automobiles versus trucks.
-
-### 3. Create Reproducible Splits
-
-- Download the official CIFAR-10 training and test sets with Torchvision.
-- Split the official training set into 45,000 training and 5,000 validation images.
-- Use a fixed random seed.
-- Use a stratified split so all classes remain similarly represented.
-- Save the train and validation indices so future runs use exactly the same split.
-- Do not inspect test metrics while choosing the model or hyperparameters.
-
-### 4. Preprocess and Augment Data
-
-Use separate transformations for training and evaluation.
-
-Training transformation:
-
-- Convert image to a tensor.
-- Apply small random crop with padding.
-- Apply random horizontal flip.
-- Normalize with CIFAR-10 channel mean and standard deviation.
-
-Validation and test transformation:
-
-- Convert image to a tensor.
-- Normalize with the same training-data statistics.
-- Do not apply random augmentations.
-
-Avoid vertical flips because upside-down objects are not representative of normal CIFAR-10 images. Start with only crop and horizontal flip; add or remove one augmentation at a time during experiments.
-
-With PyTorch `nn.CrossEntropyLoss`, labels should remain class integers from `0` to `9`. Do not one-hot encode labels.
-
-The training and evaluation transforms are defined in `src/data.py`.
-
-### 5. Build Datasets and DataLoaders
-
-Create PyTorch `Dataset` objects for training, validation, and test data.
-
-Create `DataLoader` objects with:
-
-- `shuffle=True` for training.
-- `shuffle=False` for validation and test.
-- A configurable batch size, initially `128` for training and `256` for evaluation.
-- A configurable number of workers.
-
-The split-aware datasets and loaders are defined in `src/data.py`.
-
-### 6. Establish a Baseline
-
-Build a small CNN yourself. Begin with two convolution blocks:
-
-```text
-Input image: 3 x 32 x 32
-    -> convolution + ReLU + max pooling
-    -> convolution + ReLU + max pooling
-    -> flatten
-    -> fully connected layer + ReLU + dropout
-    -> fully connected output layer with 10 logits
-```
-
-Your model will use PyTorch layers such as:
-
-```python
-nn.Conv2d
-nn.ReLU
-nn.MaxPool2d
-nn.Dropout
-nn.Linear
-```
-
-Do not apply softmax inside the model when using `nn.CrossEntropyLoss`; it expects raw logits.
-
-The CNN baseline is defined in `src/model.py`.
-
-### 7. Write the Training Loop
-
-Write the loop yourself rather than using a high-level trainer:
+The loop in [`src/train.py`](src/train.py) is written by hand:
 
 ```python
 model.train()
 for images, labels in train_loader:
-    optimizer.zero_grad()
-    logits = model(images)
-    loss = criterion(logits, labels)
-    loss.backward()
-    optimizer.step()
+    optimizer.zero_grad()            # clear gradients from the previous batch
+    logits = model(images)           # forward pass
+    loss = loss_function(logits, labels)
+    loss.backward()                  # autograd computes gradients
+    optimizer.step()                 # AdamW updates weights
 ```
 
-This step teaches the full optimization process behind a CNN classifier:
+After every epoch, the model runs on validation data under `model.eval()` and `torch.no_grad()`. The checkpoint with the **best validation accuracy** is saved, and loss, accuracy and learning rate are logged to TensorBoard.
 
-- Set the model to training mode so layers like dropout behave correctly.
-- Pull the next batch from the `DataLoader`.
-- Zero the gradients so old values do not accumulate across batches.
-- Run the forward pass to compute logits.
-- Compute the loss between predictions and the true class labels.
-- Call `loss.backward()` to compute gradients for each weight and bias.
-- Update parameters with `optimizer.step()`.
+| Setting | Value |
+| --- | --- |
+| Loss | `nn.CrossEntropyLoss()` |
+| Optimiser | AdamW, learning rate 1e-3 |
+| Epochs | 20 (best checkpoint kept) |
+| Batch size | 128 train / 256 evaluation |
+| Augmentation | random crop + horizontal flip |
+| Dropout | 0.0 |
+| Seed | 42 |
+| Device | CPU |
 
-For the baseline, use:
+### Learning curves of the selected model
 
-- Loss: `nn.CrossEntropyLoss()`.
-- Optimizer: `AdamW`.
-- Initial learning rate: `1e-3`.
-- Training length: start with 20 to 30 epochs.
-- Checkpoint: save the model with the best validation accuracy or lowest validation loss.
+<img src="reports/figures/readme/learning_curves.png" alt="Training and validation loss and accuracy over 20 epochs for the selected model" width="100%">
 
-The training loop for this project is implemented in `src/train.py`.
+Training and validation curves stay close together the whole way, so the model is **generalising** rather than memorising. Validation accuracy peaks at epoch 17 (77.88%), and that checkpoint is the one used for testing.
 
-### 8. Write the Validation Loop
+---
 
-At the end of every epoch:
+## Experiments
 
-- Set `model.eval()`.
-- Disable gradient calculation with `torch.no_grad()`.
-- Calculate validation loss and validation accuracy.
-- Save the best checkpoint based on the selected validation metric.
+Each run answers **one question** by changing one setting. Decisions were based on **validation accuracy only**.
 
-Validation data is for making decisions such as:
+| ID | Change | Best val. accuracy | Best epoch | What it tells us |
+| :---: | --- | ---: | :---: | --- |
+| 0 | Crop + horizontal-flip augmentation | 77.66% | 20 | Augmented baseline |
+| 1 | No augmentation | 74.22% | 8 | Augmentation adds **+3.4 points** |
+| 2 | Seeded baseline, learning rate 1e-3 | 77.74% | 20 | Reference for the learning-rate comparison |
+| 3 | Learning rate 3e-4 | 74.18% | 18 | Too slow to converge in 20 epochs |
+| 4 | Dropout removed (p = 0.0) | **77.88%** | 17 | Slightly better than p = 0.3 → **selected** |
 
-- Which CNN architecture to use.
-- Whether augmentation helps.
-- Which learning rate works better.
-- Whether dropout helps.
-- When to stop training.
+<img src="reports/figures/readme/experiment_comparison.png" alt="Validation accuracy per epoch for all five experiments, and best validation accuracy per experiment" width="100%">
 
-### 9. Track Experiments in TensorBoard
+### Why augmentation matters
 
-Log these values every epoch:
+<img src="reports/figures/readme/augmentation_overfitting.png" alt="Train and validation loss without augmentation diverging after epoch 8, compared with close curves when using crop and flip" width="100%">
 
-- Training loss.
-- Validation loss.
-- Training accuracy.
-- Validation accuracy.
-- Learning rate.
+Without augmentation, training accuracy climbs to **95.4%** by epoch 20, but validation accuracy **falls** to 72.6% after peaking at epoch 8. That's classic overfitting. With crop and flip, training and validation stay within about 1 point of each other.
 
-Use TensorBoard to inspect whether the model is:
+### Selected configuration
 
 ```text
-Underfitting:  training and validation results are both poor.
-Overfitting:   training improves while validation stagnates or worsens.
-Generalizing:  validation improves and remains reasonably close to training.
+Augmentation:   random crop (padding 4) + horizontal flip
+Learning rate:  0.001 (AdamW)
+Dropout:        0.0
+Seed:           42
+Best val. acc.: 77.88% at epoch 17
+Checkpoint:     checkpoints/augmented_dropout0_0_1e-3_seed42/best_model.pt
 ```
 
-### 10. Tune One Question at a Time
+---
 
-Use validation results only. Create a small experiment table like this:
+## Final test evaluation
 
-| ID | Change | Validation result | What it tells us |
-| --- | --- | --- | --- |
-| 0 | Crop and horizontal-flip augmentation | 77.66% accuracy, Epoch 20 | Augmented baseline |
-| 1 | No augmentation | 74.22% accuracy, Epoch 8 | Augmentation improved validation accuracy |
-| 2 | Seeded crop and horizontal-flip baseline, learning rate 0.001 | 77.74% accuracy, Epoch 20 | Reference run for learning-rate comparison |
-| 3 | Learning rate 0.0003 | 74.18% accuracy, Epoch 18 | Lower learning rate learned too slowly |
-| 4 | Remove dropout, p=0.0 | 77.88% accuracy, Epoch 17 | Slightly better than dropout p=0.3 |
-| 5 | Compare AdamW and SGD with momentum | | Does optimizer choice matter? |
+The frozen checkpoint was evaluated **once** on the 10,000 official test images, and the model wasn't changed afterwards.
 
-Do not change many things in one experiment. Each run should answer one clear question.
+| Metric | Value |
+| --- | ---: |
+| Test accuracy | **77.57%** |
+| Test loss | 0.6541 |
+| Macro precision / recall / F1 | 77.52% / 77.57% / 77.40% |
 
-### Selected Validation Configuration
+Source: [`reports/final_test_result.json`](reports/final_test_result.json).
 
-After comparing experiments using validation data, select this configuration:
+### Per-class performance
 
-```text
-Augmentation: crop and horizontal flip
-Learning rate: 0.001
-Dropout: 0.0
-Seed: 42
-Best validation accuracy: 77.88%, Epoch 17
-Checkpoint: checkpoints/augmented_dropout0_0_1e-3_seed42/best_model.pt
+<img src="reports/figures/readme/per_class_metrics.png" alt="Precision, recall and F1 per class sorted by F1" width="100%">
+
+| Class | Precision | Recall | F1 |
+| --- | ---: | ---: | ---: |
+| automobile | 88.68% | 87.70% | **88.19%** |
+| ship | 84.54% | 89.70% | 87.05% |
+| truck | 79.82% | 87.80% | 83.62% |
+| frog | 80.08% | 85.20% | 82.56% |
+| horse | 86.14% | 78.90% | 82.36% |
+| airplane | 78.13% | 80.40% | 79.25% |
+| deer | 75.24% | 77.50% | 76.35% |
+| dog | 66.10% | 70.00% | 67.99% |
+| bird | 75.78% | 61.00% | 67.59% |
+| cat | 60.72% | 57.50% | **59.07%** |
+
+Source: [`reports/per_class_metrics.json`](reports/per_class_metrics.json).
+
+**Reading the cat row:** recall of 57.5% means the model found 575 of the 1,000 real cats. Precision of 60.7% means that when it said "cat", it was right about 61% of the time. F1 of 59.1% balances the two.
+
+Vehicles (automobile, ship, truck) are the easiest classes. Animals with similar shape and texture (cat, dog, bird) are the hardest.
+
+---
+
+## Error analysis
+
+### Confusion matrix
+
+<table>
+<tr>
+<td width="52%"><img src="reports/figures/readme/confusion_matrix_normalized.png" alt="Row-normalised confusion matrix in percent"></td>
+<td width="48%"><img src="reports/figures/readme/top_confusions.png" alt="Ten most frequent true-to-predicted mistakes"></td>
+</tr>
+</table>
+
+<details>
+<summary>Raw-count confusion matrix (from <code>src/analyze_errors.py</code>)</summary>
+<br>
+<img src="reports/figures/confusion_matrix.png" alt="Confusion matrix with raw counts" width="70%">
+</details>
+
+**Observations:**
+
+- **Cat ↔ dog dominates.** 160 cats were predicted as dogs and 164 dogs as cats. That's 16% of each class, and the two largest off-diagonal cells by a wide margin.
+- **Bird is the most scattered class.** Its errors spread over deer (75), dog (72), airplane (72) and frog (69). Small birds against sky or grass lose their shape at 32 × 32.
+- **Vehicle confusions follow shape similarity:** automobile → truck (77), airplane → ship (62) and truck → automobile (56). Sky and water backgrounds look alike at low resolution.
+- 8 of the 10 most frequent mistakes are between two animals, or between two vehicles. The model has clearly learned the coarse animal-vs-vehicle split.
+
+### Confidently wrong predictions
+
+Mistakes made with ≥ 99% confidence. Most come from unusual poses, backgrounds that resemble another class (a blue sky gives "airplane"), or cropped objects.
+
+<img src="reports/figures/confidently_wrong_predictions.png" alt="Grid of 16 test images the model misclassified with very high confidence" width="80%">
+
+### Least-confident predictions
+
+The images the model was least sure about, with the top class at only 18–24% probability. Many are extreme close-ups or partial views, such as a car's tail-light, a horse's head or a ship's bow. Others have clutter, such as a rider beside a horse. Only 3 of these 16 are classified correctly.
+
+<img src="reports/figures/low_confidence_predictions.png" alt="Grid of test images with the lowest predicted-class confidence" width="80%">
+
+---
+
+## Reproduce
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+
+python -m src.create_splits        # stratified 45k/5k split, seed 42 → splits/
+python -m src.train                # trains the config set at the top of src/train.py
+tensorboard --logdir runs          # learning curves
+python -m src.evaluate             # one-time test evaluation → reports/final_test_result.json
+python -m src.analyze_errors       # per-class metrics + confusion / error grids
 ```
 
-### 11. Perform One Final Test Evaluation
+CIFAR-10 downloads automatically to `data/` through Torchvision. The experiment name, learning rate, augmentation flag and seed are constants at the top of [`src/train.py`](src/train.py). Change **one** at a time to repeat the experiment table.
 
-After selecting the final configuration using validation data:
+<details>
+<summary><b>Regenerate the README figures</b></summary>
 
-1. Load the best saved checkpoint.
-2. Evaluate on the untouched 10,000-image official test set.
-3. Record the test loss and accuracy.
-4. Do not keep changing the model based on test results.
-
-The test result estimates how well the final chosen model generalizes to unseen CIFAR-10 data.
-
-Final test result:
-
-```text
-Selected checkpoint: augmented_dropout0_0_1e-3_seed42, Epoch 17
-Test loss: 0.6541
-Test accuracy: 77.57%
+```bash
+pip install matplotlib numpy pillow tensorboard
+python scripts/make_readme_figures.py
 ```
 
-### 12. Analyze Errors
+The script reads the TensorBoard logs in `runs/` (kept locally, not in Git), the local CIFAR-10 copy in `data/`, and the tracked reports. Its output goes to `reports/figures/readme/`.
+</details>
 
-Accuracy is not enough. Create:
+---
 
-- A confusion matrix.
-- Per-class precision, recall, and F1 score.
-- A grid of confidently wrong predictions.
-- A grid of low-confidence predictions.
-- Notes on common confusions, such as cat versus dog or automobile versus truck.
-
-Answer questions such as:
-
-- Which classes are hardest?
-- Are errors caused by small object size, background clutter, pose, or class similarity?
-- Does augmentation improve every class or only some classes?
-- Is validation performance consistent with test performance?
-
-### Final Error Analysis Results
-
-The final test-set analysis is generated by `src/analyze_errors.py` and saves:
-
-- `reports/per_class_metrics.json`
-- `reports/figures/confusion_matrix.png`
-- `reports/figures/confidently_wrong_predictions.png`
-- `reports/figures/low_confidence_predictions.png`
-
-The hardest class was `cat`, with an F1 score of 59.07%. The most common visual
-confusion was between cats and dogs: 160 cats were predicted as dogs, and 164
-dogs were predicted as cats. Birds and dogs were the next hardest classes by F1
-score, at 67.59% and 67.99%.
-
-concepts:
-Recall 57.5%: out of 1,000 real cat images, the model correctly recognized 575 as cats.
-Precision 60.7%: when the model said “cat,” it was correct about 61% of the time.
-F1 score 59.1%: one combined score balancing precision and recall.
-
-## Suggested Project Structure
+## Repository layout
 
 ```text
 Supervised_learning_CIFAR10/
-├── README.md
-├── requirements.txt
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   └── 02_error_analysis.ipynb
 ├── src/
-│   ├── data.py
-│   ├── model.py
-│   ├── train.py
-│   ├── evaluate.py
-│   └── utils.py
-├── configs/
-│   └── baseline.yaml
-├── splits/
-│   ├── cifar10_train_val_seed42.json
-│   └── cifar10_train_val_seed42.npz
-├── checkpoints/
-├── runs/
-└── reports/
-    ├── figures/
-    └── results.md
+│   ├── create_splits.py     # stratified, seeded train/validation split
+│   ├── data.py              # transforms, split-aware Datasets and DataLoaders
+│   ├── model.py             # SmallCNN (1.07M parameters)
+│   ├── train.py             # manual training + validation loop, TensorBoard, checkpointing
+│   ├── evaluate.py          # one-time test-set evaluation
+│   └── analyze_errors.py    # per-class metrics, confusion matrix, error grids
+├── notebooks/
+│   └── 01_data_exploration.ipynb
+├── splits/                  # saved train/validation indices (seed 42)
+├── reports/
+│   ├── final_test_result.json
+│   ├── per_class_metrics.json
+│   └── figures/             # confusion matrix, error grids, README charts
+├── scripts/
+│   └── make_readme_figures.py
+├── PROJECT_REPORT.md        # plain-language results report
+├── README_old.md            # original step-by-step project plan
+└── requirements.txt
 ```
 
-Use notebooks for data exploration and result visualization. Keep the actual training, validation, checkpointing, and final testing code in Python files so runs are repeatable.
+`data/`, `checkpoints/` and `runs/` are git-ignored.
 
-## Definition of Done
+---
 
-The project is complete when you can show:
+## Key concepts
 
-- A fixed, reproducible 45k/5k/10k split.
-- A CNN that you defined yourself.
-- Your own PyTorch training and validation loops.
-- TensorBoard learning curves.
-- A small validation-based experiment table.
-- A final test result evaluated once after selecting the model.
-- A confusion matrix, per-class metrics, and qualitative error analysis.
-- A README or report that explains the results and limitations honestly.
+| Concept | Simple meaning |
+| --- | --- |
+| CNN | A neural network that learns spatial patterns in images |
+| Epoch | One full pass over the training images |
+| Augmentation | Small random image changes that help the model generalise |
+| Loss | How wrong the model is; lower is better |
+| Validation set | Separate data used to make development decisions |
+| Test set | Untouched data used once to report final performance |
+| Checkpoint | Saved weights from the best validation epoch |
+| Underfitting | Training and validation are both poor |
+| Overfitting | Training improves while validation stalls or worsens (see experiment 1) |
+| Precision / recall / F1 | Correctness of predictions / coverage of real examples / their balance |
 
-## Next Step
+---
 
-Start with Milestone 1: set up the environment, download CIFAR-10 using Torchvision, and verify the dataset shapes and labels before writing the CNN.
+## Limitations and next steps
+
+- **Low resolution:** at 32 × 32, small animals and fine details are hard to tell apart.
+- **One small architecture and one seed:** the differences between experiments 0, 2 and 4 (77.66–77.88%) are within the noise you'd expect between seeds.
+- **Short training:** 20 epochs with no learning-rate schedule. The selected run's training accuracy was still rising.
+- **Possible next experiments,** each chosen on validation, never on this test result:
+  - Compare AdamW with SGD + momentum.
+  - Add a third convolution block or batch normalisation.
+  - Add a learning-rate schedule.
+  - Repeat runs over several seeds.
+- The next project in the series is a NumPy MLP with hand-written backpropagation.
+
+---
+
+<sub>See [`PROJECT_REPORT.md`](PROJECT_REPORT.md) for a plain-language results report and [`README_old.md`](README_old.md) for the original milestone-by-milestone plan.</sub>
